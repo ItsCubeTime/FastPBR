@@ -1,5 +1,10 @@
 # Quick demo video
-https://youtu.be/H1a0zsd9-6Y
+
+https://user-images.githubusercontent.com/20190653/136704470-e3d3a362-9d9f-48e7-8a6a-69f4d155d6db.mp4
+The resulting image created in the video ended up looking like so once combined with some smart materials in "Quixel Mixer" afterwards:
+![DimScreen_0KQC9k9Nkf](https://user-images.githubusercontent.com/20190653/136704479-869414bf-1a4b-440c-bd17-36b90903a5ad.jpg)
+
+
 
 # FastPBR
 Fast PBR Viewport Render is a tool that lets you fetch curvature, AO, normal maps, transparency, matID and height from the camera youre currently looking through or directly from your viewport. It uses Blenders "Render viewport" operator which renders pretty much exactly what you see on screen or what the camera you are looking through currently has within frame. Therefore its extremely flexible as "what you see is what you get" and as you can use it ANYWHERE to render ANY sort of geometry or scene. It works by modifying your render settings and renderer (it uses Eevee and workbench for maximum performance), it can render out several 4K maps in the matter of seconds, making it versatile and useable for projects where you need to do a lot of rendering (and hence cant afford any time lost for waiting). It also comes equipped with a flexible, configurable and automatic file naming and folder hierarchy system that lets you move and name your images wherever you want based on custom &amp; automatically generated variables that describes your images.
@@ -30,5 +35,11 @@ Anyone is welcome to contribute, the addon is 100% pure Python 3.
 # Troubleshooting
 
 If you encounter any issues, dont hesitate to open up an issue ticket here on Github and I will do my best to assist. <3 Also dont shy away from digging in the code yourself if you believe you can figure out whats happening in the event of an unexpected Python error or any sort of unexpected behaviour.
+
+# Intended workflow
+
+The addon had its initial development in the process of the making of a video game "We Might Die" (an upcoming title as of writing this), we needed A LOT of textures baked from geometry for hard surface details for sci-fi ship interiors. The workflow is that you model/sculpt/generate geometry of any kind (the addon supports any sort of geometry thats visible in workbench & Eevee) in Blender or your software of choice, generate the maps and then add image based microdetails and materials in a texturing software of choice, such as Quixel Mixer.
+
+Its recommended that you keep your images to the power of 2 (so 512, 1024, 2048, 4096 (etc)) and perfectly square as that will yield best performance when using it in most modern renderers as of today.
 
 ## Thanks for checking out my repo!
