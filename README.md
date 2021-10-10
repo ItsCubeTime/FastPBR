@@ -1,8 +1,8 @@
 # Quick demo video
 
-https://user-images.githubusercontent.com/20190653/136704470-e3d3a362-9d9f-48e7-8a6a-69f4d155d6db.mp4
+![Demo video](https://user-images.githubusercontent.com/20190653/136704470-e3d3a362-9d9f-48e7-8a6a-69f4d155d6db.mp4)
 The resulting image created in the video ended up looking like so once combined with some smart materials in "Quixel Mixer" afterwards:
-![DimScreen_0KQC9k9Nkf](https://user-images.githubusercontent.com/20190653/136704479-869414bf-1a4b-440c-bd17-36b90903a5ad.jpg)
+![Example artwork](https://user-images.githubusercontent.com/20190653/136704479-869414bf-1a4b-440c-bd17-36b90903a5ad.jpg)
 
 
 
