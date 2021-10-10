@@ -29,6 +29,8 @@ https://user-images.githubusercontent.com/20190653/136704479-869414bf-1a4b-440c-
 4. Save your file for safety (The addon modifies your render settings and later reverts them, but if the script fails to reach the end due to a fatal error (which could occur if the Blender version you're using is not 100% compatable) it might not get a chance to restore the settings. If that happens however, you should be able to hit ctrl Z on your keyboard to revert the settings yourself as the addon automatically sets up a restore state to go back to.
 5. Hit the top button "Fast PBR Viewport Render" to render out your maps, once the operation is complete you will see a pop-up message appear at your cursor as well as that Windows file explorer will automatically open up the directory that the images has been created in for you.
 
+To find out more about each button and property in the UI, you can hover over it to get a short decsription:
+![image](https://user-images.githubusercontent.com/20190653/136705600-442c0aa1-3f48-4595-860d-9d6a7ec426e6.png)
 
 # Contributing
 
