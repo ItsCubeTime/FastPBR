@@ -12,7 +12,7 @@ The resulting image created in the video ended up looking like so once combined 
 https://user-images.githubusercontent.com/20190653/136704479-869414bf-1a4b-440c-bd17-36b90903a5ad.jpg
 
 
-# Install instructions.
+# Install instructions
 
 1. Download the FastPBRNormalMatCap.exr attached in any of the releases:
 ![image](https://user-images.githubusercontent.com/20190653/136703921-1df20cef-71d8-4ca2-af3f-72d43ecad2f3.png)
