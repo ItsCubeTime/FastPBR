@@ -38,6 +38,21 @@ Anyone is welcome to contribute, the addon is 100% pure Python 3.
 
 If you encounter any issues, dont hesitate to open up an issue ticket here on Github and I will do my best to assist. <3 Also dont shy away from digging in the code yourself if you believe you can figure out whats happening in the event of an unexpected Python error or any sort of unexpected behaviour.
 
+Also make sure to read the below section "Known issues"
+
+# Known issues
+
+1. The transparency pass is inverted - still wip.
+2. The height doesnt utelize the full 0-1 range as its utelizing Eevees mist, also wip.
+
+# Things I want to add
+
+1. Support for normal maps that are texture based.
+2. Support for baking geometry with inverted normals without it affecting the result of the baked texture emitted by Fast PBR.
+3. Better height maps.
+4. A grid visualizer that lets you preview how large a pixel will be on the final image before performing a render.
+5. Got a sick idea? Dont hesitate to let me know about it!
+
 # Contact
 
 You can reach me by either opening an issue or discussion here on Github, or sending a dm to me over Discord: danieljackson#0286
