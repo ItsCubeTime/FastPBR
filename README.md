@@ -38,6 +38,10 @@ Anyone is welcome to contribute, the addon is 100% pure Python 3.
 
 If you encounter any issues, dont hesitate to open up an issue ticket here on Github and I will do my best to assist. <3 Also dont shy away from digging in the code yourself if you believe you can figure out whats happening in the event of an unexpected Python error or any sort of unexpected behaviour.
 
+# Contact
+
+You can reach me by either opening an issue or discussion here on Github, or sending a dm to me over Discord: danieljackson#0286
+
 # Intended workflow
 
 The addon had its initial development in the process of the making of a video game "We Might Die" (an upcoming title as of writing this), we needed A LOT of textures baked from geometry for hard surface details for sci-fi ship interiors. The workflow is that you model/sculpt/generate geometry of any kind (the addon supports any sort of geometry thats visible in workbench & Eevee) in Blender or your software of choice, generate the maps and then add image based microdetails and materials in a texturing software of choice, such as Quixel Mixer.
