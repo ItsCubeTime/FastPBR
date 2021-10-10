@@ -41,6 +41,8 @@ If you encounter any issues, dont hesitate to open up an issue ticket here on Gi
 
 The addon had its initial development in the process of the making of a video game "We Might Die" (an upcoming title as of writing this), we needed A LOT of textures baked from geometry for hard surface details for sci-fi ship interiors. The workflow is that you model/sculpt/generate geometry of any kind (the addon supports any sort of geometry thats visible in workbench & Eevee) in Blender or your software of choice, generate the maps and then add image based microdetails and materials in a texturing software of choice, such as Quixel Mixer.
 
+The addon is also capable of renaming images emitted by another software and doing the naming for you with naming standards of choice.
+
 Its recommended that you keep your images to the power of 2 (so 512, 1024, 2048, 4096 (etc)) and perfectly square as that will yield best performance when using it in most modern renderers as of today.
 
 ## Thanks for checking out my repo!
