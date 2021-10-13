@@ -1,3 +1,8 @@
+import subprocess
+import sys
+
+
+
 import shutil
 import os
 import glob
@@ -260,8 +265,8 @@ def moveImages(sourceDirectory, targetDirectory, replacementDictionary, removeOr
             while replaceFrom in preparedTargetDirectoryAndFileNameWithExtension:
                 preparedTargetDirectoryAndFileNameWithExtension = preparedTargetDirectoryAndFileNameWithExtension.replace(replaceFrom, str(replaceTo))
                 # print(targetDirectory, "--", replaceFrom, "--", replaceTo)
-        if not targetDirectory.__contains__('.'):
-            ShowMessageBox("The target directory must include the file name and its extension!", "Fast PBR", 'ERROR')
+        if not preparedTargetDirectoryAndFileNameWithExtension.__contains__('.'):
+            ShowMessageBox(f"The target directory {targetDirectory} must include the file name and its extension!", "Fast PBR", 'ERROR')
             return {'FINISHED'}
 
 

@@ -3,10 +3,10 @@ from typing import Any, Mapping, ValuesView
 from typing import TYPE_CHECKING
 
 import bpy
-# from "C:/Program Files/Blender Foundation/blender-3.0.0-alpha+master.2b64b4d90d67-windows.amd64-release/3.0/scripts/addons/fast_pbr_viewport_render/fileRenamer.py" import moveImages
-import os
-from .fileRenamer import *
-import glob
+
+import bpy
+import subprocess
+import sys
 
 bl_info = {
     "name": "Fast PBR Viewport Render",
@@ -14,11 +14,73 @@ bl_info = {
     "category": "Object",
 }
 
-pathToStoreImagesIn = "C:/FromFastPBR/"
 
+# installPackage('PILLOW')
+# installPackage('numpy')
 __name__ # This is the name of the folder that the __init__.py is in. I think
 addonName: str = bl_info["name"]
 addonNameShort: str = "Fast PBR"
+
+import importlib
+def putTextInBox(text):
+    lines = text.splitlines()
+    width = max(len(s) for s in lines)
+    res = ['┌' + '─' * width + '┐']
+    for s in lines:
+        res.append('│' + (s + ' ' * width)[:width] + '│')
+    res.append('└' + '─' * width + '┘')
+    return '\n'.join(res)
+def installPackage(package: str):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+# Running installPackage is a slow operation, therefore we want to make sure that we only run it when necessary, hence this function to speed up registration/activation time of the addon SIGNIFICANTLY (like by 5-10 seconds).
+def attemptToImportModuleAndInstallItIfItIfTheCorespondingPackageDoesntExist(packageName, moduleName): 
+    print("Attempting")
+    try:
+        importlib.import_module(moduleName)
+        # from PIL import Image
+    except Exception as error:
+        print(putTextInBox(f"{addonName}Error: ---\n{error}\n---\nwhen attempting to import {moduleName}, we're assuming that you dont have {packageName} installed and will try to install it for you!"))
+        installPackage(packageName)
+        importlib.import_module(moduleName) # Doesnt actually work? 
+ListOfModulesToAttemptToImportAndInstallItIfItIfTheCorespondingPackageDoesntExist = [['PILLOW', 'PIL'], ['numpy']]
+attemptToImportModuleAndInstallItIfItIfTheCorespondingPackageDoesntExist('PILLOW', 'PIL')
+import PIL
+attemptToImportModuleAndInstallItIfItIfTheCorespondingPackageDoesntExist('numpy', 'numpy')
+import numpy
+# import pi
+# attemptToImportModuleAndInstallItIfItIfTheCorespondingPackageDoesntExist('PILLOW', 'PIL')
+# attemptToImportModuleAndInstallItIfItIfTheCorespondingPackageDoesntExist('numpy', 'numpy')
+# from PIL import Images
+# if TYPE_CHECKING: # Importing packages just for intellisense as our import function wont run through VS Codes intellisense engine.
+
+# import numpy
+# print(help(numpy))
+
+
+# materialToReplaceTo = ""
+# materialToReplaceFrom = ""
+
+# bpy.ops.ed.undo_push()
+
+# for object in bpy.context.scene.objects:
+#     object: bpy.types.Object
+#     for materialSlot in object.material_slots:
+#         materialSlot: bpy.types.MaterialSlot
+#         if materialSlot.material.name_full == materialToReplaceFrom:
+#             materialSlot.material = bpy.data.materials.get(materialToReplaceTo)
+
+
+
+# from "C:/Program Files/Blender Foundation/blender-3.0.0-alpha+master.2b64b4d90d67-windows.amd64-release/3.0/scripts/addons/fast_pbr_viewport_render/fileRenamer.py" import moveImages
+import os
+from .fileRenamer import *
+import glob
+
+
+pathToStoreImagesIn = "C:/FromFastPBR/"
+
+
 
 
 
@@ -33,12 +95,26 @@ nameOfWorldUsedDuringPBRmapCreation = "FastPBRViewportRender"
 disableRestore = True # Set to true for  debugging
 
 # addonNameShort = "Fast PBR"
-
+import pathlib
+pathToAddonDirectory = str(pathlib.Path(__file__).parent.resolve())
+nameOfAssetsFileWithoutPath = 'FastPBRAssets.blend'
+pathToAssetsFile = pathToAddonDirectory + '/' + nameOfAssetsFileWithoutPath
+# 
 
 #############################
 ##### Utility functions #####
 #############################
 # @bookmark Utility functions
+def appendAssetFromAssetsBlendFile(dataBlockToAppend: str, blendFileDataCategory: str):
+    """
+    dataBlockToAppend is the name of the object/material/whatever you want to append.
+    blendFileDataCategory is the type of data you want to append, if you go into the outliner > display mode > Data API you will see all these categories. Example values: "Material", "Object", "Node Groups" (etc). For some reason, the "s" at the end of some categories displayed in that list is not supposed to be included, which is rather confusing :)
+    """
+    bpy.ops.wm.append(filename=dataBlockToAppend, directory=pathToAssetsFile + '\\' + blendFileDataCategory + '\\')
+        
+    print("filepath:", nameOfAssetsFileWithoutPath)
+    print("directory:", pathToAssetsFile + '\\' + blendFileDataCategory)
+    print("filename:", dataBlockToAppend)
 
 def containsLowerCase(string):
     # string: str = ""
@@ -92,14 +168,6 @@ def insertSpaceAfterCapital(string):
     return outputString
 
 
-def putTextInBox(text):
-    lines = text.splitlines()
-    width = max(len(s) for s in lines)
-    res = ['┌' + '─' * width + '┐']
-    for s in lines:
-        res.append('│' + (s + ' ' * width)[:width] + '│')
-    res.append('└' + '─' * width + '┘')
-    return '\n'.join(res)
 
 ############################
 # End of Utility functions #
@@ -1149,6 +1217,11 @@ class RenderPass(FastPanelBaseClass, bpy.types.Panel):
         # cls.layout.label(text=f"{cls.bl_label}First Sub Panel of Panel 1.")     
         # print("LOOK HERE ", f'{cls.settings.enable_pass=}'.split('=')[0].split('.')[-1])
         cls.layout.prop(retrieveSettings(cls), f'{cls.settings.enable_pass=}'.split('=')[0].split('.')[-1])
+        cls.draw_pass_specific_ui_elements(context)
+
+
+    def draw_pass_specific_ui_elements(cls, context):
+        pass
                                
     ##########
     # UI END #
@@ -1193,7 +1266,8 @@ class RenderPass(FastPanelBaseClass, bpy.types.Panel):
         # image.save_render(pathToStoreImagesIn, "test")
         # image.filepath_raw = 'C:\FastPBRViewportRender'
         # image.file_format = 'PNG'
-        pathToStoreImageInIncludingFileNameAndFileExtension = 'C:/FastPBRViewportRender/'
+        # pathToStoreImageInIncludingFileNameAndFileExtension = 'C:/FastPBRViewportRender/'
+        pathToStoreImageInIncludingFileNameAndFileExtension = pathToStoreImagesIn
         pathToStoreImageInIncludingFileNameAndFileExtension = pathToStoreImageInIncludingFileNameAndFileExtension + self.passName + ".png"
         # bpy.context.scene.render.__format__
         # image = bpy.data.images.new("Sprite", alpha=True, width=16, height=16)
@@ -1212,6 +1286,10 @@ class RenderPass(FastPanelBaseClass, bpy.types.Panel):
         # bpy.ops.image.save_as(save_as_render=True, copy=True, filepath="//..\\..\\untitled321.png", relative_path=True, show_multiview=False, use_multiview=False)
         # bpy.ops.image. 
 
+    @classmethod
+    def perform_post_process(self):
+        """Runs after save_to_disk"""
+        pass
 
     @classmethod
     def prepare_render_and_save(self):
@@ -1219,9 +1297,67 @@ class RenderPass(FastPanelBaseClass, bpy.types.Panel):
         if retrieveSettingsUsing__name__insteadOfbl_idname(self).enable_pass:
             self.render()
             self.save_to_disk()
+            self.perform_post_process()
         
 # classesToRegister.append(classesToRegister.append(RenderPass))
 # @bookmark Normal pass
+
+
+class RenderAppendedMaterialTypeRenderPass(RenderPass): # A base class for render passes that are supposed to render a specific material only
+    f"""To use this class, assign the literal name of the material in our assets file that you want to render to the materialToRender variable.
+    
+    Children of this class are typically found towards the bottom of the render pass section as its rendered in Eeevee."""
+
+    materialToRender = 'FastPBRNormal'
+    """This is the literal name of the material in our assets file that you want to render!"""
+
+    @classmethod
+    def prepare_to_render(self):
+        bpy.context.space_data.shading.render_pass = 'DIFFUSE_COLOR'
+        bpy.context.scene.render.engine = 'BLENDER_EEVEE'
+        # bpy.context
+        # bpy.context.scene.render.engine = 'RENDER'
+        # Switch viewport view to rendered, rather than solid or wire or whatever.
+        bpy.context.space_data.shading.type = 'RENDERED'
+
+        
+        print("File path:", pathlib.Path(__file__).parent.resolve())
+        
+        if bpy.data.materials.find(self.materialToRender) < 0:
+            appendAssetFromAssetsBlendFile(self.materialToRender, 'Material')
+        for object in bpy.data.objects:
+            object: bpy.types.Object
+            for materialSlot in object.material_slots:
+                materialSlot: bpy.types.MaterialSlot
+                # materialSlot.link = 'FastPBRNormal'
+                materialSlot.material = bpy.data.materials.get(self.materialToRender)
+
+    @classmethod
+    def perform_post_process(self):
+        pathToStoreImageInIncludingFileNameAndFileExtension = pathToStoreImagesIn
+        fileToPerformPostProcessOn = pathToStoreImageInIncludingFileNameAndFileExtension + self.passName + ".png"
+
+        print("hello from post process")
+        # from PIL import Image
+        # import numpy
+
+        im = Image.open(fileToPerformPostProcessOn)
+        im = im.convert('RGBA')
+
+        data = numpy.array(im)   # "data" is a height x width x 4 numpy array
+        red, green, blue, alpha = data.T # Temporarily unpack the bands for readability
+
+        # Replace white with red... (leaves alpha values alone...)
+        white_areas = (red < 3) & (blue < 3) & (green < 3)
+        data[..., :-1][white_areas.T] = (128, 128, 255) # Transpose back needed
+        # white_areas = (red == 1) & (blue == 1) & (green == 1)
+        # data[..., :-1][white_areas.T] = (128, 128, 255) # Transpose back needed
+
+        im2 = Image.fromarray(data)
+        im2 = im2.convert('RGB')
+        im2.save(fileToPerformPostProcessOn)
+        im2.show()
+        print("Second hello")
 
 @renderPassDecorator
 class RenderNormalPassWithWorkbench(RenderPass):
@@ -1420,6 +1556,13 @@ class RenderTransparencyPassWithEeveeEnvironmentPass(RenderPass):
         bpy.context.scene.display.shading.single_color = (999, 999, 999)
 
 
+
+@renderPassDecorator
+class RenderNormalFromAppendedMaterial(RenderAppendedMaterialTypeRenderPass):
+    passName = "normal"
+    materialToRender = 'FastPBRNormal'
+    def draw_pass_specific_ui_elements(cls, context): 
+        label_multiline(f"""Compared to rendering the normal pass with workbench, this pass has the advantage of that it totally ignores whether faces are pointing the wrong direction or not, they will always appear like as if they were pointing towards the camera, or a direction that has a maximum of a 90 degree angle from the camera. A downside of this pass is that it might not be able to replace the material of all objects if you have objects from other files linked in your blend.""",context,cls.layout)
         
 
 ###################################################################################
@@ -1481,6 +1624,8 @@ class FastPBRViewportRender(OperatorBaseClass):
     # bl_label = "Fast PBR viewport render"         # Display name in the interface.
     # bl_options = {'REGISTER', 'UNDO'}  # Enable undo for the operator.
 
+
+
     def test(self):
         print("wot")
     def execute(self, context):        # execute() is called when running the operator.
@@ -1494,6 +1639,53 @@ class FastPBRViewportRender(OperatorBaseClass):
         # renderNormalPassWithWorkbench.prepare_render_and_save()
         BackupPrepareAndRestore.backupSettingsAndPrepareForRender()
 
+        # bpy.ops.wm.append(
+        #     filepath="cube.blend",
+        #     directory="/home/lucas/Desktop/cube.blend\\Object\\",
+        #     filename="Cube")
+        
+##################################################
+        # import pathlib
+        # pathToAddonDirectory = str(pathlib.Path(__file__).parent.resolve())
+        # nameOfAssetsFileWithoutPath = 'FastPBRAssets.blend'
+        # pathToAssetsFile = pathToAddonDirectory + '/' + nameOfAssetsFileWithoutPath
+        # # 
+        # def appendAssetFromAssetsBlendFile(dataBlockToAppend: str, blendFileDataCategory: str):
+        #     """
+        #     dataBlockToAppend is the name of the object/material/whatever you want to append.
+
+        #     blendFileDataCategory is the type of data you want to append, if you go into the outliner > display mode > Data API you will see all these categories. Example values: "Material", "Object", "Node Groups" (etc). For some reason, the "s" at the end of some categories displayed in that list is not supposed to be included, which is rather confusing :)
+        #     """
+        #     bpy.ops.wm.append(filename=dataBlockToAppend, directory=pathToAssetsFile + '\\' + blendFileDataCategory + '\\')
+                
+        #     print("filepath:", nameOfAssetsFileWithoutPath)
+        #     print("directory:", pathToAssetsFile + '\\' + blendFileDataCategory)
+        #     print("filename:", dataBlockToAppend)
+                    
+        # pathToNormalAssetsFile = pathToAddonDirectory + '/' + 'FastPBRAssets.blend'
+        # print("File path:", pathlib.Path(__file__).parent.resolve())
+        
+        # if bpy.data.materials.find('FastPBRNormal') < 0:
+        #     appendAssetFromAssetsBlendFile('FastPBRNormal', 'Material')
+        # for object in bpy.data.objects:
+        #     object: bpy.types.Object
+        #     for materialSlot in object.material_slots:
+        #         materialSlot: bpy.types.MaterialSlot
+        #         # materialSlot.link = 'FastPBRNormal'
+        #         materialSlot.material = bpy.data.materials.get('FastPBRNormal')
+                # materialSlot
+################################################
+
+        # print("File path:", pathlib.Path(__file__).parent.resolve())
+        # bpy.ops.wm.append(
+        #     filepath="cube.blend",
+        #     directory=pathToAssetsFile,
+        #     filename="Cube")
+        # bpy.ops.wm.append(
+        #     filepath="cube.blend",
+        #     directory="C:/Program Files/Blender Foundation/blender-3.0.0-alpha+master.2b64b4d90d67-windows.amd64-release/3.0/scripts/addons/fast_pbr_viewport_render/FastPBRAssets.blend\\Object",
+        #     filename="Cube")
+        # return {'FINISHED'}     
         
         # print("IMPORTANTEEE" + getGlobalAddonProperties().target_directory)
 
