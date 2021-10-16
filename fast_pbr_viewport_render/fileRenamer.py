@@ -299,6 +299,8 @@ def moveImages(sourceDirectory, targetDirectory, replacementDictionary, removeOr
         ShowMessageBox("Your images are now in the destination folder!", "Fast PBR", 'INFO')
 
     pathForExplorer = preparedTargetDirectoryWithoutFile.replace('/', '\\')
+    while pathForExplorer.find('\\\\') > -1:
+        pathForExplorer = pathForExplorer.replace('\\\\', '\\')
     os.system(f'explorer "{pathForExplorer}"')
     print(f'Opening explorer -> explorer "{pathForExplorer}"')
     

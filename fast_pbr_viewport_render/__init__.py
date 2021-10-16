@@ -2,11 +2,15 @@ from __future__ import annotations
 from typing import Any, Mapping, ValuesView
 from typing import TYPE_CHECKING
 
+from PIL import ImageChops
+
 import bpy
 
 import bpy
 import subprocess
 import sys
+
+from bpy.types import MaterialSlot, PropertyGroup
 
 bl_info = {
     "name": "Fast PBR Viewport Render",
@@ -14,6 +18,39 @@ bl_info = {
     "category": "Object",
 }
 
+def copyModifiers(copyAllModifiersAndThereSettingsFromObject: bpy.types.Object, copyTargetObjects: list(bpy.types.Object)):
+    # copyAllModifiersAndThereSettingsFromObject = bpy.context.object
+    # copyTargetObjects = [o for o in bpy.context.selected_objects
+    #                     if o != copyAllModifiersAndThereSettingsFromObject and o.type == copyAllModifiersAndThereSettingsFromObject.type]
+
+    for obj in copyTargetObjects:
+        obj: bpy.types.Object
+        # if hasattr(obj, 'name') and hasattr(copyAllModifiersAndThereSettingsFromObject, 'name') and hasattr(obj, 'material_slots') and hasattr(obj, 'modifiers'):
+        if obj.type == 'MESH' and not obj == copyAllModifiersAndThereSettingsFromObject:
+            # if obj.type == copyAllModifiersAndThereSettingsFromObject.type:
+            # if obj.type == copyAllModifiersAndThereSettingsFromObject.type:
+
+            for mSrc in copyAllModifiersAndThereSettingsFromObject.modifiers:
+                mSrc: bpy.types.Modifier
+                mDst: bpy.types.Modifier = obj.modifiers.get(mSrc.name, None)
+                # if not mDst:
+                #     mDst = obj.modifiers.new(mSrc.name, mSrc.type) # The if block is useful if you want to avoid duplicates, although 
+                # this can also be a bad behaviour as if the user happen to have put an identical modifier somewhere in the middle of the stack
+                # , the script will not add another one at the end of the stack - which in our case is often necessary.
+                # print(f"@@@@@@@@@@@@@@@@@@@@@@@@@@@@ obj: {obj}")
+                # print(f"@@@@@@@@@@@@@@@@@@@@@@@@@@@@ mSrc: {mSrc}")
+                # print(f"@@@@@@@@@@@@@@@@@@@@@@@@@@@@ mSrc.name: {mSrc.name}")
+                # print(f"@@@@@@@@@@@@@@@@@@@@@@@@@@@@ mSrc.type: {mSrc.type}")
+                mDst = obj.modifiers.new(mSrc.name, mSrc.type)
+                # print(f"@@@@@@@@@@@@@@@@@@@@@@@@@@@@ mDst: {mDst}")
+                # collect names of writable properties
+                properties = [p.identifier for p in mSrc.bl_rna.properties
+                            if not p.is_readonly]
+
+                # copy those properties
+                for prop in properties:
+                    # getattr(mSrc, prop)
+                    setattr(mDst, prop, getattr(mSrc, prop))
 
 # installPackage('PILLOW')
 # installPackage('numpy')
@@ -486,15 +523,22 @@ class GRABDOC_OT_map_preview_warning(bpy.types.Operator):
         # row.separator(factor = .5)
         # row.prop(retrieveSettings(RenderNormalPassWithWorkbench), "second_file_path")
 
-
+# @bookmark panel base class
 class FastPanelBaseClass:
+    bl_space_type = "VIEW_3D"
+    # bl_region_type = "TOOLS" # This actually puts the panel
+    # on the left side of the 3D viewport! Since the left panel is usually very
+    # narrow however, I dont recommend putting it here.
+    bl_region_type = "UI"
+    bl_category = "Fast"
+class FastToolBarPanelBaseClass:
     bl_space_type = "VIEW_3D"
     # bl_region_type = "TOOLS" # This actually puts the panel
     # on the left side of the 3D viewport! Since the left panel is usually very
     # narrow however, I dont recommend putting it here.
 
 
-    bl_region_type = "UI"
+    bl_region_type = "HEADER"
     bl_category = "Fast"
     # bl_options = {"DEFAULT_CLOSED"}
 import textwrap
@@ -520,6 +564,8 @@ def retrieveOperatorFromCls(cls):
     # return PascalCaseTo_snake_case(f"{addonNameShort}_{cls.__name__}")
     return cls.bl_idname
 
+# @bookmark main panel
+
 @registerOperatorsDecorator
 class FastPBRViewportRender(FastPanelBaseClass, bpy.types.Panel):
     # bl_idname = "EXAMPLE_PT_panel_1"
@@ -528,6 +574,8 @@ class FastPBRViewportRender(FastPanelBaseClass, bpy.types.Panel):
     def draw(self, context):
         # print("YOOOOOOOOOOOOOOOOOOOOOOOOOOOOO: " + retrieveOperatorFromCls(FastPBRViewportRender))
         self.layout.operator(retrieveOperatorFromCls(FastPBRViewportRender))
+        self.layout.operator(retrieveOperatorFromCls(FastPBRRestoreSettings))
+        self.layout.operator(retrieveOperatorFromCls(MatchViewportDisplayAndSurfaceBaseColor))
         # self.layout.row().prop(bpy.context.scene.fast_pbr_render_normal_pass_with_workbench, "file_path")
         # box = self.layout.box()
         # # box.separator_spacer = 0.1
@@ -1137,7 +1185,7 @@ class BackupPrepareAndRestore():
             #     key = myDictionary[key]
             # bpy.context =  test
             bpy.context.space_data.overlay.show_overlays = self.show_overlaysBackup
-            bpy.context.scene.world =  bpy.data.worlds.get(self.activeWorldBackup.name_full)
+            # bpy.context.scene.world =  bpy.data.worlds.get(self.activeWorldBackup.name_full)
 
 
 
@@ -1177,6 +1225,7 @@ class BackupPrepareAndRestore():
 class RenderPass(FastPanelBaseClass, bpy.types.Panel):
     bl_options = {'DRAW_BOX', 'DEFAULT_CLOSED'}
     # @registerOperatorsDecorator
+
     class settings(bpy.types.PropertyGroup): # CANNOT BE RENAMED
             # def __init_subclass__(cls, scm_type=None, name=None, **kwargs):
             #     print(f"initializing subclass: {cls}")
@@ -1321,23 +1370,46 @@ class RenderAppendedMaterialTypeRenderPass(RenderPass): # A base class for rende
         bpy.context.space_data.shading.type = 'RENDERED'
 
         
+
         print("File path:", pathlib.Path(__file__).parent.resolve())
         
         if bpy.data.materials.find(self.materialToRender) < 0:
             appendAssetFromAssetsBlendFile(self.materialToRender, 'Material')
+        if bpy.data.objects.find(self.materialToRender) < 0:
+            appendAssetFromAssetsBlendFile(self.materialToRender, 'Object')
+            bpy.data.objects[self.materialToRender].visible_camera = False
+            bpy.data.objects[self.materialToRender].hide_render = True
+            bpy.data.objects[self.materialToRender].hide_viewport = True
+            # Skipping to loop over collections to save some precious execution time of looping over collections. The block is otherwise perfectly functional
+            # for collection in bpy.context.scene.collection:
+            #     collection: bpy.types.Collection
+            #     collection.objects.unlink(bpy.data.objects[self.materialToRender])
+            # bpy.context.scene.collection.objects.unlink(bpy.data.objects[self.materialToRender])
+
+
+
+
         for object in bpy.data.objects:
             object: bpy.types.Object
-            for materialSlot in object.material_slots:
-                materialSlot: bpy.types.MaterialSlot
-                # materialSlot.link = 'FastPBRNormal'
-                materialSlot.material = bpy.data.materials.get(self.materialToRender)
+            if hasattr(object.data, 'materials'):
+                if object.material_slots.__len__() < 1:
+                    # bpy.ops.object.material_slot_add() 
+                    # object.material_slots[0].material[0] = bpy.data.materials.get(self.materialToRender)
+                    object.data.materials.append(None)
+                    # cube.material_slots[0].material = bpy.data.materials['Blue']
+                for materialSlot in object.material_slots:
+                    materialSlot: bpy.types.MaterialSlot
+                    # materialSlot.link = 'FastPBRNormal'
+                    materialSlot.material = bpy.data.materials.get(self.materialToRender)
+        copyModifiers(bpy.data.objects[self.materialToRender], bpy.data.objects)
+        # raise ValueError('A very specific bad thing happened.')
 
     @classmethod
     def perform_post_process(self):
         pathToStoreImageInIncludingFileNameAndFileExtension = pathToStoreImagesIn
         fileToPerformPostProcessOn = pathToStoreImageInIncludingFileNameAndFileExtension + self.passName + ".png"
 
-        print("hello from post process")
+        # print("hello from post process")
         # from PIL import Image
         # import numpy
 
@@ -1347,17 +1419,18 @@ class RenderAppendedMaterialTypeRenderPass(RenderPass): # A base class for rende
         data = numpy.array(im)   # "data" is a height x width x 4 numpy array
         red, green, blue, alpha = data.T # Temporarily unpack the bands for readability
 
-        # Replace white with red... (leaves alpha values alone...)
-        white_areas = (red < 3) & (blue < 3) & (green < 3)
-        data[..., :-1][white_areas.T] = (128, 128, 255) # Transpose back needed
+        
+        white_areas = (red < 3) & (blue < 3) & (green < 3) # Condition for writing
+        data[..., :-1][white_areas.T] = (128, 128, 255) # Replace values that fullfill the condition with 128,128,255
         # white_areas = (red == 1) & (blue == 1) & (green == 1)
         # data[..., :-1][white_areas.T] = (128, 128, 255) # Transpose back needed
-
         im2 = Image.fromarray(data)
         im2 = im2.convert('RGB')
+        im.close()
         im2.save(fileToPerformPostProcessOn)
-        im2.show()
-        print("Second hello")
+        im2.close()
+        # im2.show()
+        # print("Second hello")
 
 @renderPassDecorator
 class RenderNormalPassWithWorkbench(RenderPass):
@@ -1424,9 +1497,105 @@ class RenderNormalPassWithWorkbench(RenderPass):
         bpy.context.scene.view_settings.gamma = 1
         bpy.context.scene.sequencer_colorspace_settings.name = 'Raw'
 
+    @classmethod
+    def perform_post_process(cls):
+        # return
+        # Now we will invert the pixels where the normal map has rendered a face that is facing away from the camera.
 
+        # This will let users simply not care about correcting there face normals before rendering, so even if it may
+        # add 3-4 seconds worth of render time - its probably gonna save the user more time than if he had to ensure
+        # his normals are correct.
+        pathToStoreImageInIncludingFileNameAndFileExtension = pathToStoreImagesIn
+        fileToPerformPostProcessOn = pathToStoreImageInIncludingFileNameAndFileExtension + cls.passName + ".png"
+        
+        from PIL import Image, ImageChops
+        imageWithoutCull = Image.open(fileToPerformPostProcessOn).convert('RGB')
+        # import numpy as np
+        bpy.context.scene.display.shading.show_backface_culling = True
+        cls.render()
+        cls.passName = 'temp'
+        cls.save_to_disk() # Save a 'temp' file to disk.
+        normalWithBackfaceCulling = pathToStoreImageInIncludingFileNameAndFileExtension + cls.passName + ".png"
+        imageWithCull = Image.open(normalWithBackfaceCulling).convert('RGB')
+        # imageWithCull = Image.open('C:/Users/Oliver/Desktop/test/inversionTest/withCull.png').convert('RGB')
+        # imageWithoutCull = Image.open('C:/Users/Oliver/Desktop/test/inversionTest/withoutCull.png').convert('RGB')
+        # img1 = Image.open('C:/Users/Oliver/Desktop/test/untitled.png').convert('RGB')
+        # img2 = Image.open('C:/Users/Oliver/Desktop/test/untitled3.png').convert('RGB')
+        
+        # # image3 = ImageChops.difference(image1, image2)
+        
+        # # image3.save('C:/Users/Oliver/Desktop/test/untitled3.png')
+        
+        
+        # # from PIL import Image, ImageChops
+        # print(img1)
+        # # assign images
+        # # img1 = Image.open("1img.jpg")
+        # # img2 = Image.open("2img.jpg")
+        # # image1.show()
+        # # finding difference
+        # # import numpy as np
+        # # whiteImage = np.zeros([100,100,3],dtype=np.uint8)
+        # # whiteImage.fill(255) # or img[:] = 255
+        # whiteImage = Image.new('RGB', (1920, 1080), color = (1,1,1))
+        # diff = ImageChops.add_modulo(ImageChops.difference(img1, img2).convert('RGB'), whiteImage).convert('L')
+        # # ImageChops.hard_light
+        # final = Image.composite(img2, img1, diff)
+        # # showing the difference
+        # ImageChops.hard_light
+        
+        # img1AsArray = numpy.asarray(img1)
+        # img2AsArray = numpy.asarray(img2)
+        
+        # final = PIL.Image.fromarray(numpy.uint8((img1AsArray == img2AsArray)))
+        
+        
+        # final.show()
+        
+        # import numpy as np
+        print(imageWithoutCull.size)
+        # img1 = Image.open('test.png')
+        imageWithoutCull = imageWithoutCull.convert('RGBA')
+        imageWithCull = imageWithCull.convert('RGBA')
+        
+        imageWithoutCullAsArray = numpy.array(imageWithoutCull)   # "data" is a height x width x 4 numpy array
+        imageWithCullAsArray = numpy.array(imageWithCull)   # "data" is a height x width x 4 numpy array
+        red1, green1, blue1, alpha1 = imageWithoutCullAsArray.T # Temporarily unpack the bands for readability
+        red2, green2, blue2, alpha2 = imageWithCullAsArray.T # Temporarily unpack the bands for readability
+        
+        # Replace white with red... (leaves alpha values alone...)
+        differences = (red1 == red2) & (blue1 == blue2) & (green1 == green2)
+        # image1asArray = Image.new('RGBA', (1920, 1080), (0,0,0,0))
+        imageWithoutCullAsArray[..., :-1][differences.T] = (0, 0, 0) # Transpose back needed
+        imageWithoutCullAsArray[..., :-1][~ differences.T] = (255, 255, 255) # Transpose back needed
+        
+        diff = Image.fromarray(imageWithoutCullAsArray).convert('L')
+        
+        red, green, blue, alpha = imageWithoutCull.split()
+        invertedImg1 = Image.merge('RGBA', (ImageChops.invert(red), ImageChops.invert(green), blue, alpha))
+        
+        imageWithoutCull = imageWithoutCull.convert('RGB')
+        invertedImg1 = invertedImg1.convert('RGB')
+        final = Image.composite(invertedImg1, imageWithoutCull, diff)
+        imageWithoutCull.close()
+        invertedImg1.close()
+        diff.close()
+        imageWithCull.close()
+        final.save(fileToPerformPostProcessOn)
+        final.close()
+        
+        # from PIL import Image
+        # from PIL.ImageChops import invert
+        
+        # image = Image.open('test.tif')
+        # red, green, blue = image.split()
+        # image_with_inverted_green = Image.merge('RGB', (invert(red), invert(green), blue))
+        # image_with_inverted_green.save('test_inverted_green.tif')
+        
+        # os.remove(normalWithBackfaceCulling)
+        
 
-
+        bpy.context.scene.display.shading.show_backface_culling = False
 
 
 # @bookmark Curvature pass
@@ -1473,6 +1642,34 @@ class RenderCurvaturePassWithWorkbench(RenderPass):
         # bpy.context.scene.display.shading.show_object_outline = False
         # bpy.context.scene.display.shading.show_specular_highlight = True
         
+@renderPassDecorator
+class RenderMatIDPassWithWorkbenchViewportDisplayCol(RenderPass):
+    passName = "MatID"
+
+    @classmethod
+    def prepare_to_render(self):
+
+        # # 3D Viewport > Viewport shading (top right) > Render Pass
+        # bpy.context.space_data.shading.render_pass = 'DIFFUSE_COLOR'
+        
+        # # Render properties > Sampling
+        # bpy.context.scene.eevee.taa_samples = 1
+
+        # Render properties > Lighting
+        bpy.context.scene.display.shading.color_type = 'MATERIAL'
+
+        # Render properties > Color
+        bpy.context.scene.display.shading.light = 'FLAT'
+
+        # Render properties > Options
+        bpy.context.scene.display.shading.show_cavity = False
+
+        # for material in bpy.data.materials:
+        #     material: bpy.types.Material
+        #     material.diffuse_color =  material.node_tree.nodes
+        #     bpy.data.materials["Material"].node_tree.nodes["Principled BSDF"].inputs[0].default_value = (0.8, 0.272124, 0.414903, 1)
+
+
 # @bookmark AO pass
 @renderPassDecorator
 class RenderAOPassWithEevee(RenderPass):
@@ -1537,7 +1734,8 @@ class RenderTransparencyPassWithEeveeEnvironmentPass(RenderPass):
     # settings = dict()
     # settings["High quality transparency"] = False
 
-    
+    restoreDisplayDevice = ''
+    restoreSequencer = ''
 
 
     @classmethod
@@ -1555,14 +1753,37 @@ class RenderTransparencyPassWithEeveeEnvironmentPass(RenderPass):
         # Render properties > Color
         bpy.context.scene.display.shading.single_color = (999, 999, 999)
 
+        self.restoreDisplayDevice = bpy.context.scene.display_settings.display_device
+        bpy.context.scene.display_settings.display_device = 'None'
+
+        self.restoreSequencer = bpy.context.scene.sequencer_colorspace_settings.name
+        bpy.context.scene.sequencer_colorspace_settings.name = 'Raw'
 
 
-@renderPassDecorator
-class RenderNormalFromAppendedMaterial(RenderAppendedMaterialTypeRenderPass):
-    passName = "normal"
-    materialToRender = 'FastPBRNormal'
-    def draw_pass_specific_ui_elements(cls, context): 
-        label_multiline(f"""Compared to rendering the normal pass with workbench, this pass has the advantage of that it totally ignores whether faces are pointing the wrong direction or not, they will always appear like as if they were pointing towards the camera, or a direction that has a maximum of a 90 degree angle from the camera. A downside of this pass is that it might not be able to replace the material of all objects if you have objects from other files linked in your blend.""",context,cls.layout)
+    def perform_post_process(self):
+        # Inverts the alpha pass so that white means visible and black means invisible.
+        bpy.context.scene.display_settings.display_device = self.restoreDisplayDevice
+        bpy.context.scene.sequencer_colorspace_settings.name = self.restoreSequencer
+
+        pathToStoreImageInIncludingFileNameAndFileExtension = pathToStoreImagesIn
+        fileToPerformPostProcessOn = pathToStoreImageInIncludingFileNameAndFileExtension + self.passName + ".png"
+        imageToPerformPostProcessOn = Image.open(fileToPerformPostProcessOn)
+        finalImage = ImageChops.invert(imageToPerformPostProcessOn)
+        imageToPerformPostProcessOn.close()
+        finalImage.save(fileToPerformPostProcessOn)
+
+
+
+# def RenderNormalFromAppendedMaterialDecorator(cls: RenderAppendedMaterialTypeRenderPass):
+#     retrieveSettings(cls).enable_pass = False
+
+# @RenderNormalFromAppendedMaterialDecorator
+# @renderPassDecorator
+# class RenderNormalFromAppendedMaterial(RenderAppendedMaterialTypeRenderPass):
+#     passName = "normal"
+#     materialToRender = 'FastPBRNormal'
+#     def draw_pass_specific_ui_elements(cls, context): 
+#         label_multiline(f"""Compared to rendering the normal pass with workbench, this pass has the advantage of that it totally ignores whether faces are pointing the wrong direction or not, they will always appear like as if they were pointing towards the camera, or a direction that has a maximum of a 90 degree angle from the camera. A downside of this pass is that it might not be able to replace the material of all objects if you have objects from other files linked in your blend.""",context,cls.layout)
         
 
 ###################################################################################
@@ -1612,6 +1833,274 @@ class OperatorBaseClass(bpy.types.Operator, object):
 # class test(PluginBase):
 #     pass
 
+@registerOperatorsDecorator
+class FastPBRBackupSettings(OperatorBaseClass):
+    def execute(self, context: bpy.types.Context) -> bpy.typing.Set[str]:
+        BackupPrepareAndRestore.backupSettingsAndPrepareForRender()
+        return {'FINISHED'}
+
+
+@registerOperatorsDecorator
+class FastPBRRestoreSettings(OperatorBaseClass):
+    def execute(self, context: bpy.types.Context) -> bpy.typing.Set[str]:
+        BackupPrepareAndRestore.restoreSettings()
+        return {'FINISHED'}
+
+# @bookmark MatchViewportDisplayAndSurfaceBaseColor Operator
+
+replaceSelectedObjectMaterials = 'MaterialsOnSelectedObjectsOnly'
+replaceScene = 'AllMaterialsInTheCurrentScene'
+replaceAll = 'AllMaterialsInTheCurrentBlend'
+
+@settingsContainerDecorator
+class OperatorSettingsContainer():
+    class settings(bpy.types.PropertyGroup):
+            materials_to_replace: bpy.props.EnumProperty(name = "My Property", items={(replaceSelectedObjectMaterials,replaceSelectedObjectMaterials,replaceSelectedObjectMaterials), 
+                                                                        (replaceScene,replaceScene,replaceScene), 
+                                                                        (replaceAll,replaceAll,replaceAll)}, default = replaceSelectedObjectMaterials) = propertyClass()
+
+
+
+
+@registerOperatorsDecorator
+class MatchViewportDisplayAndSurfaceBaseColor(OperatorBaseClass):
+
+    # class settings(bpy.types.PropertyGroup):
+            # materials_to_replace: bpy.props.EnumProperty(name = "My Property", items={(replaceSelectedObjectMaterials,replaceSelectedObjectMaterials,replaceSelectedObjectMaterials), 
+            #                                                             (replaceScene,replaceScene,replaceScene), 
+            #                                                             (replaceAll,replaceAll,replaceAll)}, default = replaceSelectedObjectMaterials)
+    
+    
+    
+    # flag_prop: bpy.props.BoolProperty(name = "Use Int")
+    # dependent_prop: bpy.props.EnumProperty(name = "My Property", items={(replaceSelectedObjectMaterials,replaceSelectedObjectMaterials,replaceSelectedObjectMaterials), 
+    #                                                                     (replaceScene,replaceScene,replaceScene), 
+    #                                                                     (replaceAll,replaceAll,replaceAll)}, default = 'Foo')
+    
+    def execute(self, context):
+        msg = f"dependent_prop: {retrieveSettings(OperatorSettingsContainer).materials_to_replace}"
+        self.report({'INFO'}, msg)
+        print(msg)
+
+        materialsToReplace: list(bpy.types.Material) = list()
+        if retrieveSettings(OperatorSettingsContainer).materials_to_replace == replaceAll:
+            materialsToReplace = bpy.data.materials
+        elif retrieveSettings(OperatorSettingsContainer).materials_to_replace in (replaceSelectedObjectMaterials, replaceScene):
+            if retrieveSettings(OperatorSettingsContainer).materials_to_replace == replaceSelectedObjectMaterials:
+                objectsToLoop = bpy.context.selected_objects
+            elif retrieveSettings(OperatorSettingsContainer).materials_to_replace == replaceScene:
+                objectsToLoop = bpy.context.scene.objects
+
+            for object in objectsToLoop:
+                object: bpy.types.Object
+                for materialSlot in object.material_slots:
+                    materialSlot: bpy.types.MaterialSlot
+                    materialsToReplace.append(materialSlot.material)
+        # elif self.dependent_prop == self.replaceScene:
+        for material in materialsToReplace:
+            material: bpy.types.Material
+            if material.use_nodes:
+                if material.node_tree.nodes.find("Principled BSDF") > -1:
+                    material.diffuse_color = material.node_tree.nodes["Principled BSDF"].inputs[0].default_value
+# bpy.data.materials["!@darkGray"].node_tree.nodes["Principled BSDF"].inputs[0].default_value
+        return {'FINISHED'}
+    
+    def draw(self, context):
+        self.layout.use_property_split = True
+
+        row = self.layout.row()
+        # row.prop(self, "flag_prop")
+        
+        sub = row.row()
+        # sub.enabled = self.flag_prop
+        sub.prop(retrieveSettings(OperatorSettingsContainer), 'materials_to_replace', text="MaterialsToReplace")
+        # sub.prop(retrieveSettings(OperatorSettingsContainer), OperatorSettingsContainer.settings.materials_to_replace.__name__, text="Materials to replace: ")
+        # sub.prop(self, "materials_to_replace", text="Materials to replace: ")
+
+# Backup:
+
+# replaceSelectedObjectMaterials = 'MaterialsOnSelectedObjectsOnly'
+# replaceScene = 'AllMaterialsInTheCurrentScene'
+# replaceAll = 'AllMaterialsInTheCurrentBlend'
+
+# @settingsContainerDecorator
+# @registerOperatorsDecorator
+# class MatchViewportDisplayAndSurfaceBaseColor(OperatorBaseClass):
+
+#     class settings(bpy.types.PropertyGroup):
+#             materials_to_replace: bpy.props.EnumProperty(name = "My Property", items={(replaceSelectedObjectMaterials,replaceSelectedObjectMaterials,replaceSelectedObjectMaterials), 
+#                                                                         (replaceScene,replaceScene,replaceScene), 
+#                                                                         (replaceAll,replaceAll,replaceAll)}, default = 'Foo')
+    
+    
+    
+#     # flag_prop: bpy.props.BoolProperty(name = "Use Int")
+#     # dependent_prop: bpy.props.EnumProperty(name = "My Property", items={(replaceSelectedObjectMaterials,replaceSelectedObjectMaterials,replaceSelectedObjectMaterials), 
+#     #                                                                     (replaceScene,replaceScene,replaceScene), 
+#     #                                                                     (replaceAll,replaceAll,replaceAll)}, default = 'Foo')
+    
+#     def execute(self, context):
+#         msg = f"dependent_prop: {self.dependent_prop}" if self.flag_prop else "Nothing to report"
+#         self.report({'INFO'}, msg)
+#         print(msg)
+
+#         materialsToReplace: list(bpy.types.Material) = list()
+#         if self.dependent_prop == self.replaceAll:
+#             materialsToReplace = bpy.data.materials
+#         elif self.dependent_prop in (self.replaceSelectedObjectMaterials, self.replaceScene):
+#             if self.dependent_prop == self.replaceSelectedObjectMaterials:
+#                 objectsToLoop = bpy.context.selected_objects
+#             elif self.dependent_prop == self.replaceScene:
+#                 objectsToLoop = bpy.context.scene.objects
+
+#             for object in objectsToLoop:
+#                 object: bpy.types.Object
+#                 for materialSlot in object.material_slots:
+#                     materialSlot: bpy.types.MaterialSlot
+#                     materialsToReplace.append(materialSlot.material)
+#         # elif self.dependent_prop == self.replaceScene:
+#         for material in materialsToReplace:
+#             material: bpy.types.Material
+#             if material.use_nodes:
+#                 if material.node_tree.nodes.find("Principled BSDF") > -1:
+#                     material.diffuse_color = material.node_tree.nodes["Principled BSDF"].inputs[0].default_value
+# # bpy.data.materials["!@darkGray"].node_tree.nodes["Principled BSDF"].inputs[0].default_value
+#         return {'FINISHED'}
+    
+#     def draw(self, context):
+#         self.layout.use_property_split = True
+
+#         row = self.layout.row()
+#         row.prop(self, "flag_prop")
+        
+#         sub = row.row()
+#         # sub.enabled = self.flag_prop
+#         sub.prop(self, "dependent_prop", text="Materials to replace: ")
+
+#### backup end
+
+
+
+    # def execute(self, context):        # execute() is called when running the operator.
+    #     pass
+
+
+# MENU REFERENCE:
+
+
+# import bpy
+
+# class VIEW3D_MT_menu(bpy.types.Menu):
+#     bl_label = "Test"
+
+#     def draw(self, context):
+#         self.layout.operator("mesh.primitive_monkey_add")
+#         self.layout.menu("OBJECT_MT_select_submenu")
+
+# def addmenu_callback(self, context):
+#     self.layout.menu("VIEW3D_MT_menu")
+
+
+# def register():
+#     bpy.utils.register_class(VIEW3D_MT_menu)
+#     bpy.types.VIEW3D_MT_editor_menus.append(addmenu_callback)  
+
+# def unregister():
+#     bpy.types.VIEW3D_MT_editor_menus.remove(addmenu_callback)  
+#     bpy.utils.unregister_class(VIEW3D_MT_menu)
+
+
+# if __name__ == "__main__":
+#     register()
+
+
+# import bpy
+
+
+
+# class SubMenu(bpy.types.Menu):
+#     bl_idname = "OBJECT_MT_select_submenu"
+#     bl_label = "Select"
+
+#     def draw(self, context):
+#         layout = self.layout
+
+#         # layout.operator("object.select_all", text="Select/Deselect All").action = 'TOGGLE'
+#         # layout.operator("object.select_all", text="Inverse").action = 'INVERT'
+#         # layout.operator("object.select_random", text="Random")
+
+#         # # access this operator as a submenu
+#         # layout.operator_menu_enum("object.select_by_type", "type", text="Select All by Type...")
+
+#         # layout.separator()
+
+#         # # expand each operator option into this menu
+#         # layout.operator_enum("object.lamp_add", "type")
+
+#         # layout.separator()
+
+#         # # use existing memu
+#         self.layout.menu("VIEW3D_MT_transform")
+
+
+# bpy.utils.register_class(SubMenu)
+
+# # test call to display immediately.
+# bpy.ops.wm.call_menu(name="OBJECT_MT_select_submenu")
+
+# 
+
+# bpy.types.VIEW3D_MT_editor_menus.append(addmenu_callback) 
+
+# MENU REFERENCE END
+
+###############################
+# @bookmark Menus and headers #
+###############################
+# menusToRegister = dict()
+
+# @registerOperatorsDecorator
+# # class Fast(FastToolBarPanelBaseClass, bpy.types.Panel):
+# class Fast(bpy.types.Menu):
+#     menusAndHeadersToRegisterUnder = list()
+#     menusAndHeadersToRegisterUnder.append('VIEW3D_MT_editor_menus')
+#     # bl_space_type = "VIEW_3D"
+#     # bl_region_type = "NAVIGATION_BAR"
+#     # bl_category = "Object"
+#     # bl_region_type = "TOOLS" # This actually puts the panel
+#     # on the left side of the 3D viewport! Since the left panel is usually very
+#     # narrow however, I dont recommend putting it here.
+#     def draw(self, context: bpy.types.Context) -> None:
+#         self.layout.row().prop(retrieveOperatorFromCls(MatchViewportDisplayAndSurfaceBaseColor))
+
+
+# def registerMenusDecorator(cls: FastMenuBaseClass):
+#     # registerOperatorsDecorator(cls)
+#     registerClassGivebl_labelAndbl_idnameWithUnderscore(cls)
+#     # menusToRegister.append((cls, cls.menusAndHeadersToRegisterUnder))
+#     menusToRegister[cls] = cls.menusAndHeadersToRegisterUnder
+
+
+
+# # def addmenu_callback(self, context):
+# #     self.layout.menu("VIEW3D_MT_menu")
+
+
+
+# class FastMenuBaseClass(bpy.types.Menu):
+#     # pass
+#     menusAndHeadersToRegisterUnder = list()
+#     menusAndHeadersToRegisterUnder.append('VIEW3D_MT_editor_menus')
+#     # menusAndHeadersToRegisterUnder.append(retrieveOperatorFromCls(Fast).replace('.', '_'))
+
+# @registerMenusDecorator
+# class Materials(FastMenuBaseClass):
+#     def draw(self, context: bpy.types.Context) -> None:
+#         self.layout.operator(retrieveOperatorFromCls(MatchViewportDisplayAndSurfaceBaseColor))
+
+#################################
+# # # Menus and headers END # # #
+#################################
 
 # @bookmark Fast PBR Viewport Render opeartor
 @registerOperatorsDecorator
@@ -1637,6 +2126,8 @@ class FastPBRViewportRender(OperatorBaseClass):
 
         # renderNormalPassWithWorkbench = RenderNormalPassWithWorkbench()
         # renderNormalPassWithWorkbench.prepare_render_and_save()
+        
+        # print("HERE:",retrieveOperatorFromCls(FastPBRBackupSettings))
         BackupPrepareAndRestore.backupSettingsAndPrepareForRender()
 
         # bpy.ops.wm.append(
@@ -1896,6 +2387,17 @@ classesToRegister.append(FastPBRPreferences)
 
 # @bookmark register
 
+
+# @TODO automatic system for menu registration
+# # This loop generates addmenu callback functions necessary for BPY to register a menu to an existing menu or header.
+# # These  functions are later fed inside register()
+# for menuClass in menusToRegister:
+#     exec(f'''def {retrieveOperatorFromCls(menuClass).replace('.', '_')}_addmenu(self, context):
+#     self.layout.menu({retrieveOperatorFromCls(menuClass)})''')
+
+
+
+
 def register():
     # bpy.utils.register_class(FastPBRViewportRender)
     os.system("cls")
@@ -1964,6 +2466,22 @@ def register():
     # createPropertyGroupObject("bpy.types.Scene.fast_pbr", bpy.props.PointerProperty(type=FastPBR)) # Psuedo code for doing the same thing.
     # Basically I want to be able to put it in a loop iterating over a list of classes.
     
+    # @TODO automatic system for menu registration ###### Start
+    # # Append menus to existing menus in the order that there cooresponding classes are declared in the addon.
+    # print(f"menusToRegister: {menusToRegister}")
+    # for menuClass in menusToRegister:
+    #     print(f"menuClass: {menusToRegister}")
+    #     print(f"menuClass: {menusToRegister}")
+    #     for menuToRegisterMenuClassUnder in menusToRegister[menuClass]:
+    #         print(f"menusToRegister[menuClass]: {menusToRegister[menuClass]}")
+    #         print(f"menuToRegisterMenuClassUnder: {menuToRegisterMenuClassUnder}")
+    #         menuToRegisterMenuClassUnder: str()
+    #         exec(f"bpy.types.{menuToRegisterMenuClassUnder}.append({retrieveOperatorFromCls(menuClass).replace('.', '_')}_addmenu)")
+    #     # bpy.types.VIEW3D_MT_editor_menus.append(addmenu_callback)
+    ########### End
+
+
+
     print(putTextInBox(f"Registration complete"))
 
 
