@@ -1,22 +1,68 @@
 from __future__ import annotations
-from typing import Any, Mapping, ValuesView
-from typing import TYPE_CHECKING
-
-from PIL import ImageChops
-
-import bpy
-
-import bpy
-import subprocess
-import sys
-
-from bpy.types import MaterialSlot, PropertyGroup
 
 bl_info = {
     "name": "Fast PBR Viewport Render",
     "blender": (3, 00, 0),
     "category": "Object",
 }
+__name__ # This is the name of the folder that the __init__.py is in. I think
+addonName: str = bl_info["name"]
+addonNameShort: str = "Fast PBR"
+
+from typing import Any, Mapping, ValuesView
+from typing import TYPE_CHECKING
+
+
+import bpy
+
+import bpy
+import subprocess
+import sys
+import ctypes
+from bpy.types import MaterialSlot, PropertyGroup
+# print("LOOK HERE ", sys.executable)
+import os
+import importlib
+def putTextInBox(text):
+    lines = text.splitlines()
+    width = max(len(s) for s in lines)
+    res = ['┌' + '─' * width + '┐']
+    for s in lines:
+        res.append('│' + (s + ' ' * width)[:width] + '│')
+    res.append('└' + '─' * width + '┘')
+    return '\n'.join(res)
+import pip
+def installPackage(package):
+    if hasattr(pip, 'main'):
+        pip.main(['install', package])
+    else:
+        pip._internal.main(['install', package])
+
+# def installPackage(package: str):
+#     # subprocess.check_call(['"' + sys.executable + '"', "-m", "pip", "install", package])
+#     # os.system(f'"{sys.executable}" -m pip install {package}')
+#     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, f"""-c import pdb; pdb.set_trace()\nimport os\nos.system('"{sys.executable}" -m pip install {package}')\ninput()""", None, 1)
+
+# Running installPackage is a slow operation, therefore we want to make sure that we only run it when necessary, hence this function to speed up registration/activation time of the addon SIGNIFICANTLY (like by 5-10 seconds).
+def attemptToImportModuleAndInstallItIfItIfTheCorespondingPackageDoesntExist(packageName, moduleName): 
+    print("Attempting")
+    try:
+        importlib.import_module(moduleName)
+        # from PIL import Image
+    except Exception as error:
+        print(putTextInBox(f"{addonName}Error: ---\n{error}\n---\nwhen attempting to import {moduleName}, we're assuming that you dont have {packageName} installed and will try to install it for you!"))
+        installPackage(packageName)
+        importlib.import_module(moduleName) # Doesnt actually work? 
+ListOfModulesToAttemptToImportAndInstallItIfItIfTheCorespondingPackageDoesntExist = [['PILLOW', 'PIL'], ['numpy']]
+attemptToImportModuleAndInstallItIfItIfTheCorespondingPackageDoesntExist('PILLOW', 'PIL')
+import PIL
+attemptToImportModuleAndInstallItIfItIfTheCorespondingPackageDoesntExist('numpy', 'numpy')
+import numpy
+
+
+from PIL import ImageChops
+
+
 
 def copyModifiers(copyAllModifiersAndThereSettingsFromObject: bpy.types.Object, copyTargetObjects: list(bpy.types.Object)):
     # copyAllModifiersAndThereSettingsFromObject = bpy.context.object
@@ -54,37 +100,9 @@ def copyModifiers(copyAllModifiersAndThereSettingsFromObject: bpy.types.Object, 
 
 # installPackage('PILLOW')
 # installPackage('numpy')
-__name__ # This is the name of the folder that the __init__.py is in. I think
-addonName: str = bl_info["name"]
-addonNameShort: str = "Fast PBR"
 
-import importlib
-def putTextInBox(text):
-    lines = text.splitlines()
-    width = max(len(s) for s in lines)
-    res = ['┌' + '─' * width + '┐']
-    for s in lines:
-        res.append('│' + (s + ' ' * width)[:width] + '│')
-    res.append('└' + '─' * width + '┘')
-    return '\n'.join(res)
-def installPackage(package: str):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
-# Running installPackage is a slow operation, therefore we want to make sure that we only run it when necessary, hence this function to speed up registration/activation time of the addon SIGNIFICANTLY (like by 5-10 seconds).
-def attemptToImportModuleAndInstallItIfItIfTheCorespondingPackageDoesntExist(packageName, moduleName): 
-    print("Attempting")
-    try:
-        importlib.import_module(moduleName)
-        # from PIL import Image
-    except Exception as error:
-        print(putTextInBox(f"{addonName}Error: ---\n{error}\n---\nwhen attempting to import {moduleName}, we're assuming that you dont have {packageName} installed and will try to install it for you!"))
-        installPackage(packageName)
-        importlib.import_module(moduleName) # Doesnt actually work? 
-ListOfModulesToAttemptToImportAndInstallItIfItIfTheCorespondingPackageDoesntExist = [['PILLOW', 'PIL'], ['numpy']]
-attemptToImportModuleAndInstallItIfItIfTheCorespondingPackageDoesntExist('PILLOW', 'PIL')
-import PIL
-attemptToImportModuleAndInstallItIfItIfTheCorespondingPackageDoesntExist('numpy', 'numpy')
-import numpy
+
 # import pi
 # attemptToImportModuleAndInstallItIfItIfTheCorespondingPackageDoesntExist('PILLOW', 'PIL')
 # attemptToImportModuleAndInstallItIfItIfTheCorespondingPackageDoesntExist('numpy', 'numpy')
@@ -1223,7 +1241,8 @@ class BackupPrepareAndRestore():
 #                                     subtype="FILE_PATH")
 
 class RenderPass(FastPanelBaseClass, bpy.types.Panel):
-    bl_options = {'DRAW_BOX', 'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}
+    # bl_options = {'DRAW_BOX', 'DEFAULT_CLOSED'}
     # @registerOperatorsDecorator
 
     class settings(bpy.types.PropertyGroup): # CANNOT BE RENAMED
@@ -1336,7 +1355,7 @@ class RenderPass(FastPanelBaseClass, bpy.types.Panel):
         # bpy.ops.image. 
 
     @classmethod
-    def perform_post_process(self):
+    def perform_post_process(self = None):
         """Runs after save_to_disk"""
         pass
 
@@ -1405,7 +1424,7 @@ class RenderAppendedMaterialTypeRenderPass(RenderPass): # A base class for rende
         # raise ValueError('A very specific bad thing happened.')
 
     @classmethod
-    def perform_post_process(self):
+    def perform_post_process(self = None):
         pathToStoreImageInIncludingFileNameAndFileExtension = pathToStoreImagesIn
         fileToPerformPostProcessOn = pathToStoreImageInIncludingFileNameAndFileExtension + self.passName + ".png"
 
@@ -1497,10 +1516,17 @@ class RenderNormalPassWithWorkbench(RenderPass):
         bpy.context.scene.view_settings.gamma = 1
         bpy.context.scene.sequencer_colorspace_settings.name = 'Raw'
 
+        # Render properties > Sampling
+        bpy.context.scene.eevee.taa_samples = 1
+        bpy.context.scene.eevee.taa_render_samples = 1
+
+
     @classmethod
     def perform_post_process(cls):
         # return
         # Now we will invert the pixels where the normal map has rendered a face that is facing away from the camera.
+
+
 
         # This will let users simply not care about correcting there face normals before rendering, so even if it may
         # add 3-4 seconds worth of render time - its probably gonna save the user more time than if he had to ensure
@@ -1592,9 +1618,7 @@ class RenderNormalPassWithWorkbench(RenderPass):
         # image_with_inverted_green = Image.merge('RGB', (invert(red), invert(green), blue))
         # image_with_inverted_green.save('test_inverted_green.tif')
         
-        # os.remove(normalWithBackfaceCulling)
-        
-
+        os.remove(normalWithBackfaceCulling)
         bpy.context.scene.display.shading.show_backface_culling = False
 
 
@@ -1646,8 +1670,15 @@ class RenderCurvaturePassWithWorkbench(RenderPass):
 class RenderMatIDPassWithWorkbenchViewportDisplayCol(RenderPass):
     passName = "MatID"
 
+
+    display_device = ''
+    view_transform = ''
+    sequencer_colorspace_settings_name = ''
+
+
     @classmethod
     def prepare_to_render(self):
+        self: RenderMatIDPassWithWorkbenchViewportDisplayCol
 
         # # 3D Viewport > Viewport shading (top right) > Render Pass
         # bpy.context.space_data.shading.render_pass = 'DIFFUSE_COLOR'
@@ -1664,11 +1695,29 @@ class RenderMatIDPassWithWorkbenchViewportDisplayCol(RenderPass):
         # Render properties > Options
         bpy.context.scene.display.shading.show_cavity = False
 
+
+        # Render Properties > Color Management
+        self.display_device = bpy.context.scene.display_settings.display_device
+        bpy.context.scene.display_settings.display_device = 'sRGB'
+
+        self.view_transform = bpy.context.scene.view_settings.view_transform
+        bpy.context.scene.view_settings.view_transform = 'Filmic'
+
+        self.sequencer_colorspace_settings_name = bpy.context.scene.sequencer_colorspace_settings.name
+        bpy.context.scene.sequencer_colorspace_settings.name = 'Filmic Log'
+
+
         # for material in bpy.data.materials:
         #     material: bpy.types.Material
         #     material.diffuse_color =  material.node_tree.nodes
         #     bpy.data.materials["Material"].node_tree.nodes["Principled BSDF"].inputs[0].default_value = (0.8, 0.272124, 0.414903, 1)
 
+    @classmethod
+    def perform_post_process(self):
+        bpy.context.scene.display_settings.display_device = self.display_device
+        bpy.context.scene.view_settings.view_transform = self.view_transform
+        bpy.context.scene.sequencer_colorspace_settings.name = self.sequencer_colorspace_settings_name
+        
 
 # @bookmark AO pass
 @renderPassDecorator
@@ -1735,6 +1784,7 @@ class RenderTransparencyPassWithEeveeEnvironmentPass(RenderPass):
     # settings["High quality transparency"] = False
 
     restoreDisplayDevice = ''
+    restoreViewtransform = ''
     restoreSequencer = ''
 
 
@@ -1753,16 +1803,28 @@ class RenderTransparencyPassWithEeveeEnvironmentPass(RenderPass):
         # Render properties > Color
         bpy.context.scene.display.shading.single_color = (999, 999, 999)
 
+        # World properties > Surface > color
+        bpy.context.scene.world.color = (9999, 9999, 9999)
+
+
         self.restoreDisplayDevice = bpy.context.scene.display_settings.display_device
         bpy.context.scene.display_settings.display_device = 'None'
+
+        # self.restoreViewtransform = bpy.context.scene.view_settings.view_transform
+        # bpy.context.scene.view_settings.view_transform = 'Raw'
+
 
         self.restoreSequencer = bpy.context.scene.sequencer_colorspace_settings.name
         bpy.context.scene.sequencer_colorspace_settings.name = 'Raw'
 
+        
 
+
+    @classmethod
     def perform_post_process(self):
         # Inverts the alpha pass so that white means visible and black means invisible.
         bpy.context.scene.display_settings.display_device = self.restoreDisplayDevice
+        # bpy.context.scene.view_settings.view_transform = self.restoreViewtransform
         bpy.context.scene.sequencer_colorspace_settings.name = self.restoreSequencer
 
         pathToStoreImageInIncludingFileNameAndFileExtension = pathToStoreImagesIn
