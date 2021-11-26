@@ -12,6 +12,7 @@ addonNameShort: str = "Fast PBR"
 from typing import Any, Mapping, ValuesView
 from typing import TYPE_CHECKING
 
+from PIL import Image, ImageChops
 
 import bpy
 
@@ -37,7 +38,6 @@ def installPackage(package):
         pip.main(['install', package])
     else:
         pip._internal.main(['install', package])
-
 # def installPackage(package: str):
 #     # subprocess.check_call(['"' + sys.executable + '"', "-m", "pip", "install", package])
 #     # os.system(f'"{sys.executable}" -m pip install {package}')
@@ -137,8 +137,6 @@ pathToStoreImagesIn = "C:/FromFastPBR/"
 
 
 
-
-
 classesToRegister = list()
 
 settingsPropertyGroupParents = list()
@@ -154,12 +152,32 @@ import pathlib
 pathToAddonDirectory = str(pathlib.Path(__file__).parent.resolve())
 nameOfAssetsFileWithoutPath = 'FastPBRAssets.blend'
 pathToAssetsFile = pathToAddonDirectory + '/' + nameOfAssetsFileWithoutPath
-# 
+
+# Excludes a final / or \. Uses forward slashes
+pathToBlenderExeDirectoryExcludingTheExeFile: str = str(bpy.app.binary_path) 
+# pathToBlenderExeDirectoryExcludingTheExeFile = pathToBlenderExeDirectoryExcludingTheExeFile.split(pathToBlenderExeDirectoryExcludingTheExeFile.rfind("\\"))
+pathToBlenderExeDirectoryExcludingTheExeFile = pathToBlenderExeDirectoryExcludingTheExeFile.replace("\\", "/")
+pathToBlenderExeDirectoryExcludingTheExeFile = pathToBlenderExeDirectoryExcludingTheExeFile[0:pathToBlenderExeDirectoryExcludingTheExeFile.rfind('/')]
+print("pathToBlenderExeDirectoryExcludingTheExeFile: " + pathToBlenderExeDirectoryExcludingTheExeFile)
+
+
+
 
 #############################
 ##### Utility functions #####
 #############################
 # @bookmark Utility functions
+def ShowPopupMessageBoxAtCursor(message = "", title = "Message Box", icon = 'INFO'):
+
+    def draw(self, context):
+        self.layout.label(text=message)
+        
+        print(message)
+        return {'FINISHED'}
+
+    bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
+
+
 def appendAssetFromAssetsBlendFile(dataBlockToAppend: str, blendFileDataCategory: str):
     """
     dataBlockToAppend is the name of the object/material/whatever you want to append.
@@ -227,6 +245,7 @@ def insertSpaceAfterCapital(string):
 ############################
 # End of Utility functions #
 ############################
+
 
 
 ####################
@@ -1358,11 +1377,12 @@ class RenderPass(FastPanelBaseClass, bpy.types.Panel):
     def perform_post_process(self = None):
         """Runs after save_to_disk"""
         pass
-
+# @bookmark _Debugsession 66
     @classmethod
     def prepare_render_and_save(self):
         self.prepare_to_render()
         if retrieveSettingsUsing__name__insteadOfbl_idname(self).enable_pass:
+            print(f"§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§ {self} -> {retrieveSettingsUsing__name__insteadOfbl_idname(self).enable_pass}")
             self.render()
             self.save_to_disk()
             self.perform_post_process()
@@ -1450,10 +1470,16 @@ class RenderAppendedMaterialTypeRenderPass(RenderPass): # A base class for rende
         im2.close()
         # im2.show()
         # print("Second hello")
+bpy.context.preferences.studio_lights[0].name
+
+
+
+
 
 @renderPassDecorator
 class RenderNormalPassWithWorkbench(RenderPass):
-    passName = "normal" 
+    passName = "Normal" # @bookmark OBS! Im doing something funky in perform_post_process where I alter this mid.script on the fly, you will need to reflect a change to this pass name
+    # where I restore it inside of perform_post_process. This only applies to the normalRenderPass as unlike other passes it makes a second render in the post process method.
 
 
     @classmethod
@@ -1476,7 +1502,11 @@ class RenderNormalPassWithWorkbench(RenderPass):
             
         # bpy.data.worlds
         bpy.context.scene.world = bpy.data.worlds[nameOfWorldUsedDuringPBRmapCreation]
-        bpy.context.scene.world.color = (0.215861, 0.215861, 1)
+        # bpy.context.scene.world.color = (0.215861, 0.215861, 1)
+        # bpy.context.scene.world.color = (0.215861*2, 0.215861*2, 1)
+        # bpy.context.scene.world.color = (0.385001*2, 0.385001*2, 1)
+        bpy.context.scene.world.color = (0.5, 0.5, 1)
+        # bpy.context.scene.world.
         
         # bpy.context.world = bpy.contex
 
@@ -1520,7 +1550,7 @@ class RenderNormalPassWithWorkbench(RenderPass):
         bpy.context.scene.eevee.taa_samples = 1
         bpy.context.scene.eevee.taa_render_samples = 1
 
-
+# @bookmark _Debugsession 66 THE ISSUE IS IN THIS FUNCTION
     @classmethod
     def perform_post_process(cls):
         # return
@@ -1534,7 +1564,6 @@ class RenderNormalPassWithWorkbench(RenderPass):
         pathToStoreImageInIncludingFileNameAndFileExtension = pathToStoreImagesIn
         fileToPerformPostProcessOn = pathToStoreImageInIncludingFileNameAndFileExtension + cls.passName + ".png"
         
-        from PIL import Image, ImageChops
         imageWithoutCull = Image.open(fileToPerformPostProcessOn).convert('RGB')
         # import numpy as np
         bpy.context.scene.display.shading.show_backface_culling = True
@@ -1542,7 +1571,9 @@ class RenderNormalPassWithWorkbench(RenderPass):
         cls.passName = 'temp'
         cls.save_to_disk() # Save a 'temp' file to disk.
         normalWithBackfaceCulling = pathToStoreImageInIncludingFileNameAndFileExtension + cls.passName + ".png"
-        imageWithCull = Image.open(normalWithBackfaceCulling).convert('RGB')
+        # imageWithCull = Image.open(normalWithBackfaceCulling).convert('RGB')
+        imageWithCull = Image.open(normalWithBackfaceCulling)
+        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! imageWithCull: {imageWithCull.__str__()}")
         # imageWithCull = Image.open('C:/Users/Oliver/Desktop/test/inversionTest/withCull.png').convert('RGB')
         # imageWithoutCull = Image.open('C:/Users/Oliver/Desktop/test/inversionTest/withoutCull.png').convert('RGB')
         # img1 = Image.open('C:/Users/Oliver/Desktop/test/untitled.png').convert('RGB')
@@ -1620,7 +1651,10 @@ class RenderNormalPassWithWorkbench(RenderPass):
         
         os.remove(normalWithBackfaceCulling)
         bpy.context.scene.display.shading.show_backface_culling = False
-
+        cls.passName = 'Normal' # @bookmark  OBS! Im doing something very funky here with changing the passName in the middle of a function like this
+        # Im doing it for the purpose of being able to render a second image for a specific pass, but the system wasnt really designed for this so Im hijacking
+        # it slightly. Potentially bugprone if you start copy pasting code as you will need to declare pass names in 2 places for methods that changes it
+        # like this, but on this particular line and where you normall do at the beginning of the renderPass child class.
 
 # @bookmark Curvature pass
 @renderPassDecorator
@@ -1694,6 +1728,12 @@ class RenderMatIDPassWithWorkbenchViewportDisplayCol(RenderPass):
 
         # Render properties > Options
         bpy.context.scene.display.shading.show_cavity = False
+
+        # Render propertties > Sampling
+        bpy.context.scene.display.viewport_aa = 'OFF'
+        bpy.context.scene.display.render_aa = 'OFF'
+
+
 
 
         # Render Properties > Color Management
@@ -2241,7 +2281,7 @@ class FastPBRViewportRender(OperatorBaseClass):
         # return {'FINISHED'}     
         
         # print("IMPORTANTEEE" + getGlobalAddonProperties().target_directory)
-
+# @bookmark _Debugsession 66
         for renderPass in renderPasses:
             if not renderPass == RenderPass:
                 renderPass: RenderPass
@@ -2462,6 +2502,35 @@ classesToRegister.append(FastPBRPreferences)
 
 def register():
     # bpy.utils.register_class(FastPBRViewportRender)
+    #############################
+    ###### Install MatCaps ######
+    #############################
+    shouldInstallMatcaps = True
+    if(shouldInstallMatcaps):
+        normalMatCapFound = False
+        for studiolight in bpy.context.preferences.studio_lights:
+            studiolight: bpy.types.StudioLight
+            print(studiolight.name)
+            if(studiolight.name.__contains__("FastPBRNormalMatCap")):
+                normalMatCapFound = True
+                break
+
+        if(normalMatCapFound):
+            print("The normal matcap was found")
+        else:
+            print("No normal matcap doesnt appear to be install, attempting to install it")
+            pathToNormalMatcapExr = pathToAddonDirectory + "/FastPBRNormalMatCap.exr"
+            if(os.path.exists(pathToNormalMatcapExr)):
+                shutil.copy2(pathToNormalMatcapExr,pathToBlenderExeDirectoryExcludingTheExeFile + "/3.0/datafiles/studiolights/matcap")
+                bpy.context.preferences.studio_lights.refresh()
+            else:
+                warningMessage = f'We cant seem to find the Exr file for the normal matcap and therefore cant install it, please check that you have the file ->"{pathToNormalMatcapExr}"<-'
+                print(warningMessage)
+                ShowPopupMessageBoxAtCursor(warningMessage)
+    ####################################
+    ###### End of Install MatCaps ######
+    ####################################
+
     os.system("cls")
     print(putTextInBox(f"Registering {addonName}"))
     # print("Globals:" + str(globals()))
