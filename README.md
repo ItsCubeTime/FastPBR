@@ -14,7 +14,7 @@ https://user-images.githubusercontent.com/20190653/136704479-869414bf-1a4b-440c-
 
 # Install instructions
 
-1. **As of version 1.2.1 and up, installing the matcap maually is no longer required (the addon now bundles the matcap and installs it for you)! So you can safely continue to the next step. :)** Download the FastPBRNormalMatCap.exr attached in any of the [releases](https://github.com/ItsCubeTime/FastPBR/releases) and install it as a matCap in Blender (& make sure you dont rename it, the script utelizes the matcap to generate the normal maps, sorry in advance about the file size!):
+1. **As of version 1.2.1 and up, installing the matcap maually is no longer required (the addon now bundles the matcap and installs it for you)! So you can safely continue to the next step. :)** ~~Download the FastPBRNormalMatCap.exr attached in any of the [releases](https://github.com/ItsCubeTime/FastPBR/releases) and install it as a matCap in Blender (& make sure you dont rename it, the script utelizes the matcap to generate the normal maps, sorry in advance about the file size!):~~
 ![image](https://user-images.githubusercontent.com/20190653/136703921-1df20cef-71d8-4ca2-af3f-72d43ecad2f3.png)
 
 2. [Download](https://github.com/ItsCubeTime/FastPBR/releases) and install the addon .zip file like usual (via Top Panel > Edit > Preferences > Add-ons > Install > select the zip).
