@@ -29,6 +29,8 @@ https://user-images.githubusercontent.com/20190653/136704479-869414bf-1a4b-440c-
 To find out more about each button and property in the UI, you can hover over it to get a short decsription:
 ![image](https://user-images.githubusercontent.com/20190653/136705600-442c0aa1-3f48-4595-860d-9d6a7ec426e6.png)
 
+# Overview
+![image](https://user-images.githubusercontent.com/20190653/143656380-2e4c28b8-c64d-47ba-bd23-d3e613b3d0ec.png)
 # Contributing
 
 Anyone is welcome to contribute, the addon is 100% pure Python 3.
