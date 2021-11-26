@@ -1,7 +1,4 @@
-![image](https://user-images.githubusercontent.com/20190653/136705325-72a98ccb-0330-42af-bd8e-9a8e27a40ea0.png)
-
-
-
+![fastPBRBanner](https://user-images.githubusercontent.com/20190653/143656184-ede0ab79-f67a-499b-858c-92e593377941.jpg)
 # FastPBR
 Fast PBR Viewport Render is a tool that lets you fetch curvature, AO, normal maps, transparency, matID and height from the camera youre currently looking through or directly from your viewport. It uses Blenders "Render viewport" operator which renders pretty much exactly what you see on screen or what the camera you are looking through currently has within frame. Therefore its extremely flexible as "what you see is what you get" and as you can use it ANYWHERE to render ANY sort of geometry or scene. It works by modifying your render settings and renderer (it uses Eevee and workbench for maximum performance), it can render out several 4K maps in the matter of seconds, making it versatile and useable for projects where you need to do a lot of rendering (and hence cant afford any time lost for waiting). It also comes equipped with a flexible, configurable and automatic file naming and folder hierarchy system that lets you move and name your images wherever you want based on custom &amp; automatically generated variables that describes your images.
 
