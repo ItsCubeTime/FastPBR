@@ -266,7 +266,7 @@ def moveImages(sourceDirectory, targetDirectory, replacementDictionary, removeOr
                 preparedTargetDirectoryAndFileNameWithExtension = preparedTargetDirectoryAndFileNameWithExtension.replace(replaceFrom, str(replaceTo))
                 # print(targetDirectory, "--", replaceFrom, "--", replaceTo)
         if not preparedTargetDirectoryAndFileNameWithExtension.__contains__('.'):
-            ShowMessageBox(f"The target directory {targetDirectory} must include the file name and its extension!", "Fast PBR", 'ERROR')
+            ShowPopupMessageBoxAtCursor(f"The target directory {targetDirectory} must include the file name and its extension!", "Fast PBR", 'ERROR')
             return {'FINISHED'}
 
 
@@ -293,10 +293,10 @@ def moveImages(sourceDirectory, targetDirectory, replacementDictionary, removeOr
             os.remove(fileWithPathAndExtension)
     if not didWeFindAnyFilesInSourceDir:
         ErrorMsg = f'''There are no images in your source path! The source path we tried reading was: "{sourceDirectory}"'''
-        ShowMessageBox(ErrorMsg, "Error", 'ERROR')
+        ShowPopupMessageBoxAtCursor(ErrorMsg, "Error", 'ERROR')
         return {'FINISHED'}
     else: 
-        ShowMessageBox("Your images are now in the destination folder!", "Fast PBR", 'INFO')
+        ShowPopupMessageBoxAtCursor("Your images are now in the destination folder!", "Fast PBR", 'INFO')
 
     pathForExplorer = preparedTargetDirectoryWithoutFile.replace('/', '\\')
     while pathForExplorer.find('\\\\') > -1:
@@ -307,7 +307,7 @@ def moveImages(sourceDirectory, targetDirectory, replacementDictionary, removeOr
     return {'FINISHED'}
     # os.rename(r'C:\Users\Administrator.SHAREPOINTSKY\Desktop\Work\name.txt',r'C:\Users\Administrator.SHAREPOINTSKY\Desktop\Newfolder\details.txt' )
 
-def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
+def ShowPopupMessageBoxAtCursor(message = "", title = "Message Box", icon = 'INFO'):
 
     def draw(self, context):
         self.layout.label(text=message)
