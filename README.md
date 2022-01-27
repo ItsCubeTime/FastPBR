@@ -9,8 +9,7 @@ Fast PBR Viewport Render is a tool that lets you fetch curvature, AO, normal map
 
 # Limitations
 * Runs on Windows based devices exclusively at the moment. If anyone would be interested in making it work cross platform I would gladly accept any collaboration!
-* Can only bake from a single perspective (of which you choose) as the addon uses Eevee and workbench to perform the bakes. In other words, you cant bake using a target mesh.
-* 
+* Can only bake from a single perspective (of which you choose) as the addon uses Eevee and workbench to perform the bakes. In other words, you cant bake using a target mesh based on another mesh's UV.
 # Features
 * Bake any visible geometry, could be curves, text, objects w modifiers (etc).
 * Supports baking geometry that has Z fighting (the Z fighting wont show in the renders) as well as geometry with inverted normals (the addon tries to automatically detect inverted normals and corrects them once found through a fast post process filter).
