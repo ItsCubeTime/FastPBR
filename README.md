@@ -7,6 +7,10 @@
 
 Fast PBR Viewport Render is a tool that lets you fetch curvature, AO, normal maps, transparency, matID and height from the camera youre currently looking through or directly from your viewport. It uses Blenders "Render viewport" operator which renders pretty much exactly what you see on screen or what the camera you are looking through currently has within frame. Therefore its extremely flexible as "what you see is what you get" and as you can use it ANYWHERE to render ANY sort of geometry or scene. It works by modifying your render settings and renderer (it uses Eevee and workbench for maximum performance), it can render out several 4K maps in the matter of seconds, making it versatile and useable for projects where you need to do a lot of rendering (and hence cant afford any time lost for waiting). It also comes equipped with a flexible, configurable and automatic file naming and folder hierarchy system that lets you move and name your images wherever you want based on custom &amp; automatically generated variables that describes your images.
 
+# Limitations
+* Runs on Windows based devices exclusively at the moment. If anyone would be interested in making it work cross platform I would gladly accept any collaboration!
+* Can only bake from a single perspective (of which you choose) as the addon uses Eevee and workbench to perform the bakes. In other words, you cant bake using a target mesh.
+* 
 # Features
 * Bake any visible geometry, could be curves, text, objects w modifiers (etc).
 * Supports baking geometry that has Z fighting (the Z fighting wont show in the renders) as well as geometry with inverted normals (the addon tries to automatically detect inverted normals and corrects them once found through a fast post process filter).
@@ -23,8 +27,6 @@ Fast PBR Viewport Render is a tool that lets you fetch curvature, AO, normal map
 * Height (uses Eevee's mist pass, so depending on the usecase the output of this might not be ideal)
 * Transparency
 * 
-# Limitations
-* Can only bake from a single perspective (of which you choose) as the addon uses Eevee and workbench to perform the bakes. In other words, you cant bake using a target mesh.
 
 # Quick demo video
 
