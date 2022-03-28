@@ -7,6 +7,18 @@
 
 Fast PBR Viewport Render is a tool that lets you fetch curvature, AO, normal maps, transparency, matID and height from the camera youre currently looking through or directly from your viewport. It uses Blenders "Render viewport" operator which renders pretty much exactly what you see on screen or what the camera you are looking through currently has within frame. Therefore its extremely flexible as "what you see is what you get" and as you can use it ANYWHERE to render ANY sort of geometry or scene. It works by modifying your render settings and renderer (it uses Eevee and workbench for maximum performance), it can render out several 4K maps in the matter of seconds, making it versatile and useable for projects where you need to do a lot of rendering (and hence cant afford any time lost for waiting). It also comes equipped with a flexible, configurable and automatic file naming and folder hierarchy system that lets you move and name your images wherever you want based on custom &amp; automatically generated variables that describes your images.
 
+*Note: The readme is somewhat outdated as the addon has a lot more features at this date <3 Possible addon rename also coming up as it can do many more things now outside of generating PBR images.*
+# Discord
+
+We now have a Discord!
+<!---just
+![image](https://user-images.githubusercontent.com/20190653/160453165-78f4c9db-51f5-49ff-a44b-4dfba17a466d.png)
+![join_discord (Custom)]()
+--->
+https://discord.gg/TD6qNA9y7H
+
+[![Welcome!](https://user-images.githubusercontent.com/20190653/160453732-f0d2b6e5-d4ae-4256-9510-43e2e5c88c84.png)](https://discord.gg/TD6qNA9y7H)
+
 # Limitations
 * Runs on Windows based devices exclusively at the moment. If anyone would be interested in making it work cross platform I would gladly accept any collaboration!
 * Can only bake from a single perspective (of which you choose) as the addon uses Eevee and workbench to perform the bakes. In other words, you cant bake using a target mesh based on another mesh's UV.
@@ -83,7 +95,7 @@ Also make sure to read the below section "Known issues"
 
 # Contact
 
-You can reach me by either opening an issue or discussion here on Github, or sending a dm to me over Discord: danieljackson#0286
+You can reach me by either opening an issue or discussion here on Github, or sending a dm to me over Discord: danieljackson#0286 or saying hi in our Discord https://discord.gg/TD6qNA9y7H !
 
 # Intended workflow
 
