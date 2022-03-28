@@ -10,7 +10,7 @@ Fast PBR Viewport Render is a tool that lets you fetch curvature, AO, normal map
 *Note: The readme is somewhat outdated as the addon has a lot more features at this date <3 Possible addon rename also coming up as it can do many more things now outside of generating PBR images.*
 # Discord
 
-We now have a Discord!
+Join our dedicated Discord server!
 <!---just
 ![image](https://user-images.githubusercontent.com/20190653/160453165-78f4c9db-51f5-49ff-a44b-4dfba17a466d.png)
 ![join_discord (Custom)]()
