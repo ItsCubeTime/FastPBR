@@ -106,3 +106,5 @@ The addon is also capable of renaming images emitted by another software and doi
 Its recommended that you keep your images to the power of 2 (so 512, 1024, 2048, 4096 (etc)) and perfectly square as that will yield best performance when using it in most modern renderers as of today.
 
 ## Thanks for checking out my repo!
+
+![fastPBRShortBanner](https://c.tenor.com/ztEJgrjFe54AAAAC/hug-anime.gif)
