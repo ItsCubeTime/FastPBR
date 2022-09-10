@@ -37,7 +37,7 @@ https://discord.gg/TD6qNA9y7H
 * Ambient Occlusion (AO)
 * Height (uses Eevee's mist pass, so depending on the usecase the output of this might not be ideal)
 * Transparency
-* 
+* MatID
 
 # Quick demo video
 
