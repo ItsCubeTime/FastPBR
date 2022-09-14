@@ -39,12 +39,31 @@ https://discord.gg/TD6qNA9y7H
 * Transparency
 * MatID
 
-# Quick demo video
+# Video demos
+<!---
+<p float="left">
+  <img src="https://user-images.githubusercontent.com/20190653/136704479-869414bf-1a4b-440c-bd17-36b90903a5ad.jpg" width="100" />
+  <img src="https://user-images.githubusercontent.com/20190653/136704479-869414bf-1a4b-440c-bd17-36b90903a5ad.jpg" width="100" /> 
+  <img src="https://user-images.githubusercontent.com/20190653/136704479-869414bf-1a4b-440c-bd17-36b90903a5ad.jpg" width="100" />
+</p>
+<video controls>
+  <source src="https://youtu.be/kGkdHABi6yE" type="video/mp4">
+Your browser does not support the video tag.
+</video>
 
-https://user-images.githubusercontent.com/20190653/136704470-e3d3a362-9d9f-48e7-8a6a-69f4d155d6db.mp4
-The resulting image created in the video ended up looking like so once combined with some smart materials in "Quixel Mixer" afterwards:
-https://user-images.githubusercontent.com/20190653/136704479-869414bf-1a4b-440c-bd17-36b90903a5ad.jpg
 
+Solarized dark             |  Solarized Ocean
+wa Simple bake setup: https://user-images.githubusercontent.com/20190653/136704470-e3d3a362-9d9f-48e7-8a6a-69f4d155d6db.mp4   | wa  ![](https://user-images.githubusercontent.com/20190653/136704479-869414bf-1a4b-440c-bd17-36b90903a5ad.jpg)
+:-------------------------:|:-------------------------:
+--->
+
+
+* Simple bake setup: https://user-images.githubusercontent.com/20190653/136704470-e3d3a362-9d9f-48e7-8a6a-69f4d155d6db.mp4 
+The resulting image created in the video ended up looking like so once combined with some smart materials in "Quixel Mixer" afterwards: https://user-images.githubusercontent.com/20190653/136704479-869414bf-1a4b-440c-bd17-36b90903a5ad.jpg
+
+* A quick usage example showcasing how to fetch heightmap from a camera in Blender, extracting the height data & then using that to create a landscape in Unreal Engine 5:
+https://youtu.be/kGkdHABi6yE
+* Trimsheet unwrapping: https://youtu.be/CXOazuUQ_3Y
 
 # Install instructions
 
@@ -104,6 +123,7 @@ The addon had its initial development in the process of the making of a video ga
 The addon is also capable of renaming images emitted by another software and doing the naming for you with naming standards of choice.
 
 Its recommended that you keep your images to the power of 2 (so 512, 1024, 2048, 4096 (etc)) and perfectly square as that will yield best performance when using it in most modern renderers as of today.
+
 
 ## Thanks for checking out my repo!
 
