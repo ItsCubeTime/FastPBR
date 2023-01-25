@@ -65,6 +65,8 @@ The resulting image created in the video ended up looking like so once combined 
 https://youtu.be/kGkdHABi6yE
 * Trimsheet unwrapping: https://youtu.be/CXOazuUQ_3Y
 
+* 1.7.0 Turntable render: [https://youtu.be/nlrJ_2AIcQc](https://youtu.be/nlrJ_2AIcQc)
+
 # Install instructions
 
 *If you prefer a video guide: https://youtu.be/wev76s-1FG0*
