@@ -67,9 +67,13 @@ https://youtu.be/kGkdHABi6yE
 
 # Install instructions
 
+*If you prefer a video guide: https://youtu.be/wev76s-1FG0*
+
 1. [Download](https://github.com/ItsCubeTime/FastPBR/releases) and install the addon .zip file like usual (via Top Panel > Edit > Preferences > Add-ons > Install > select the zip).
 
-2. You should now see the dedicated "Fast PBR Viewpot Render" panel in In "your 3D viewport > Left side Bar/foldout panel (N is the default hotkey to open/close) > Fast > Fast PBR".
+2. As of v1.7.0, after the initial activation of the addon you should now see an error message asking you to restart Blender to complete the installation. If you see this, simply restart Blender and activate the addon once more.
+
+3. You should now see the dedicated "Fast PBR Viewpot Render" panel in In "your 3D viewport > Left side Bar/foldout panel (N is the default hotkey to open/close) > Fast > Fast PBR".
 
 4. Optional step if your normal matcap doesnt install automatically: Download the FastPBRNormalMatCap.exr attached in any of the [releases](https://github.com/ItsCubeTime/FastPBR/releases) (as of 1.2.1 and up the exr file is bundled as a part of the zip file for convenience) and install it as a matCap in Blender (& make sure you dont rename it, the script utelizes the matcap to generate the normal maps):
 ![image](https://user-images.githubusercontent.com/20190653/136703921-1df20cef-71d8-4ca2-af3f-72d43ecad2f3.png)
