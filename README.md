@@ -108,6 +108,7 @@ Also make sure to read the below section "Known issues"
 
 1. (Now fixed) The transparency pass is inverted.
 2. (Now fixed as of 1.3) The height doesnt utelize the full 0-1 range as its utelizing Eevees mist-
+3. In the 1.7.0 release the addon seems to not successfully activate the first time, activating it twice will have it start properly. I will try adressing this in the future
 
 # Things I want to add
 
